@@ -18,8 +18,23 @@ class StudentViewModel : ViewModel() {
     init {
         fetchStudents()
     }
+    fun updateStudent(student: Student) {
+        val data = mapOf(
+            "id" to student.id,
+            "name" to student.name,
+            "program" to student.program
+        )
+        db.collection("students").document(student.docId)
+            .set(data)
+            .addOnSuccessListener { fetchStudents() }
+            .addOnFailureListener { e -> Log.w("Firestore", "Error updating
+                    document", e) }
+            }
 
-    fun addStudent(student: Student) {
+
+
+
+        fun addStudent(student: Student) {
         val studentMap = hashMapOf(
             "id" to student.id,
             "name" to student.name,
@@ -36,17 +51,26 @@ class StudentViewModel : ViewModel() {
                 Log.w("Firestore", "Error adding document", e)
             }
     }
+        fun deleteStudent(student: Student) {
+            db.collection("students").document(student.docId)
+                .delete()
+                .addOnSuccessListener { fetchStudents() }
+                .addOnFailureListener { e -> Log.w("Firestore", "Error deleting
+                        document", e) }
+                }
 
-    private fun fetchStudents() {
+            private fun fetchStudents() {
         db.collection("students")
             .get()
             .addOnSuccessListener { result ->
                 val list = mutableListOf<Student>()
+
                 for (document in result) {
                     val id = document.getString("id") ?: ""
                     val name = document.getString("name") ?: ""
                     val program = document.getString("program") ?: ""
-                    list.add(Student(id, name, program))
+                    val docId = document.id
+                    list.add(Student(id, name, program, docId))
                 }
                 students = list
             }
