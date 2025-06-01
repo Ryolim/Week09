@@ -45,7 +45,7 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
     var studentId by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var program by remember { mutableStateOf("") }
-
+    var editingStudent by remember { mutableStateOf<Student?>(null) }
     Column(modifier = Modifier
         .padding(16.dp)
         .fillMaxSize()) {
@@ -55,11 +55,21 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
         TextField(value = program, onValueChange = { program = it }, label = { Text("Program") })
 
         Button(
-            onClick = {
-                viewModel.addStudent(Student(studentId, name, program))
+            onClick = {if (editingStudent == null) {
+                viewModel.addStudent(Student(studentId, name,
+                    program))
+            } else {
+                viewModel.updateStudent(Student(studentId, name,
+                    program, editingStudent!!.docId))
+                editingStudent = null
+            }
                 studentId = ""
                 name = ""
                 program = ""
+            }
+        ) {
+            Text(if (editingStudent == null) "Submit" else "Update")
+        }
             },
             modifier = Modifier.padding(top = 8.dp)
         ) {
@@ -70,9 +80,24 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
 
         Text("Student List", style = MaterialTheme.typography.titleMedium)
 
-        LazyColumn {
-            items(viewModel.students) { student ->
-                Text("${student.id} - ${student.name} - ${student.program}")
+    LazyColumn {
+        items(viewModel.students) { student ->
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                Text("${student.id} - ${student.name} -
+                    ${student.program}")
+                Button(onClick = {
+                    studentId = student.id
+                    name = student.name
+                    program = student.program
+                    editingStudent = student
+                }) {
+                    Text("Edit")
+                }
+                Button(onClick = {
+                    viewModel.deleteStudent(student)
+                }) {
+                    Text("Delete")
+                }
             }
         }
     }
